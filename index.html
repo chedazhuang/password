@@ -7,17 +7,20 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 30px auto;
-            padding: 10px;
+            max-width: 640px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         th, td {
-            border: 1px solid #ddd;
+            border: 1px solid #ccc;
             padding: 6px;
             text-align: left;
         }
@@ -25,17 +28,18 @@
             width: 100%;
             box-sizing: border-box;
             padding: 4px;
+            font-size: 14px;
         }
         button {
-            margin-top: 10px;
-            padding: 6px 12px;
+            margin-top: 12px;
+            padding: 8px 14px;
             font-size: 14px;
         }
     </style>
 </head>
 <body>
     <h2>我的账号密码表</h2>
-    <p>你填写的内容将保存在你的设备中，只有你自己能看到。</p>
+    <p>仅保存在本地浏览器中，请勿清理缓存或更换设备。</p>
     <table>
         <thead>
             <tr>
@@ -66,17 +70,17 @@
             });
         }
 
-        function updateData(index, field, value) {
-            const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
-            data[index][field] = value;
-            localStorage.setItem('myPasswords', JSON.stringify(data));
-        }
-
         function addRow() {
             const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
             data.push({ platform: '', username: '', password: '' });
             localStorage.setItem('myPasswords', JSON.stringify(data));
             loadData();
+        }
+
+        function updateData(index, field, value) {
+            const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
+            data[index][field] = value;
+            localStorage.setItem('myPasswords', JSON.stringify(data));
         }
 
         function deleteRow(index) {
