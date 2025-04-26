@@ -2,11 +2,263 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>笨比的密码本</title>
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+  <style>
+    body {
+      background-color: #e9f5ea;
+      background-image: url('mushroom_bg.png');
+      background-size: 180px;
+      background-repeat: repeat;
+      font-family: "Arial", sans-serif;
+      text-align: center;
+      padding: 0;
+      margin: 0;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #333;
+    }
+    .teemo {
+      width: 100px;
+      margin: 20px auto 10px;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0); }
+    }
+    #loginBox {
+      background: #ffffffdd;
+      padding: 16px;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    input {
+      padding: 6px;
+      margin: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 200px;
+    }
+    button {
+      padding: 6px 16px;
+      margin: 6px;
+      border: none;
+      border-radius: 6px;
+      background: #9fd6a3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #7dcf89;
+    }
+    table {
+      margin: 20px auto;
+      width: 90%;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    .eye {
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 20px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .toast.show {
+      opacity: 1;
+    }
+    .fly {
+      position: fixed;
+      width: 40px;
+      z-index: 1000;
+      animation: flyUp 1s ease forwards;
+    }
+    @keyframes flyUp {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(-150px); opacity: 0; }
+    }
+    .explode {
+      position: absolute;
+      width: 60px;
+      z-index: 1000;
+    }
+  </style>
 </head>
-<body style="background-color: #e6f4ea; font-family: Arial, sans-serif; text-align: center;">
-  <h1 style="margin-top: 50px;">笨比的密码本</h1>
-  <p>这里将展示提莫头像、蘑菇飞行、爆炸特效的页面（完整版开发中）</p>
+<body>
+  <img src="teemo.png" class="teemo" />
+  <h1>笨比的密码本</h1>
+  <div id="loginBox">
+    <input type="text" id="email" placeholder="邮箱" />
+    <input type="password" id="password" placeholder="密码" />
+    <div>
+      <button onclick="login()">登录</button>
+      <button onclick="signup()">注册</button>
+    </div>
+  </div>
+
+  <div id="app" style="display:none;">
+    <p>欢迎，<span id="userEmail"></span>！<button onclick="logout()">退出登录</button></p>
+    <button onclick="addRow()">➕ 添加新账号</button>
+    <table id="dataTable">
+      <thead>
+        <tr><th>平台</th><th>账号</th><th>密码</th><th>操作</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    AV.init({
+      appId: "QCnRk9TKVKYSZZMI7SryV1z9-gzGzoHsz",
+      appKey: "k7ZfekGgE6Ad6BxrBvE76tDS",
+      serverURL: "https://QCnRk9TK.lc-cn-n1-shared.com"
+    });
+
+    const Password = AV.Object.extend('Passwords');
+    let records = [];
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast show';
+      setTimeout(() => { el.className = 'toast'; }, 2000);
+    }
+
+    function showFlyAnimation() {
+      const img = document.createElement('img');
+      img.src = 'mushroom_fly.png';
+      img.className = 'fly';
+      img.style.left = (Math.random() * 80 + 10) + '%';
+      img.style.bottom = '20px';
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 1000);
+    }
+
+    function showExplosion(x, y) {
+      const img = document.createElement('img');
+      img.src = 'mushroom_explode.gif';
+      img.className = 'explode';
+      img.style.left = x + 'px';
+      img.style.top = y + 'px';
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 800);
+    }
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const pwd = document.getElementById('password').value;
+      AV.User.logIn(email, pwd).then(user => {
+        showApp(user);
+      }).catch(err => {
+        alert("登录失败：" + err.message);
+      });
+    }
+
+    function signup() {
+      const email = document.getElementById('email').value;
+      const pwd = document.getElementById('password').value;
+      const user = new AV.User();
+      user.setUsername(email);
+      user.setPassword(pwd);
+      user.setEmail(email);
+      user.signUp().then(user => {
+        showApp(user);
+      }).catch(err => {
+        alert("注册失败：" + err.message);
+      });
+    }
+
+    function logout() {
+      AV.User.logOut().then(() => location.reload());
+    }
+
+    function showApp(user) {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('userEmail').textContent = user.getUsername();
+      loadData();
+    }
+
+    function loadData() {
+      const query = new AV.Query('Passwords');
+      query.equalTo('userId', AV.User.current().id);
+      query.find().then(results => {
+        records = results;
+        const tbody = document.querySelector('#dataTable tbody');
+        tbody.innerHTML = '';
+        results.forEach((item, index) => {
+          const row = document.createElement('tr');
+          const platform = item.get('platform') || '';
+          const username = item.get('username') || '';
+          const password = item.get('password') || '';
+          row.innerHTML = `
+            <td><input value="${platform}" onchange="update(${index}, 'platform', this.value)" /></td>
+            <td><input value="${username}" onchange="update(${index}, 'username', this.value)" /></td>
+            <td>
+              <input type="password" value="${password}" id="pwd${index}" onchange="update(${index}, 'password', this.value)" />
+              <span class="eye" onclick="toggle(${index})">🍄</span>
+            </td>
+            <td><button onclick="removeRow(${index}, event)">💥</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function toggle(index) {
+      const el = document.getElementById('pwd' + index);
+      el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    function update(index, field, value) {
+      records[index].set(field, value);
+      records[index].save();
+    }
+
+    function addRow() {
+      showFlyAnimation();
+      toast("笨比又多记了一个小秘密～");
+      const item = new Password();
+      item.set('userId', AV.User.current().id);
+      item.set('platform', '');
+      item.set('username', '');
+      item.set('password', '');
+      item.save().then(() => loadData());
+    }
+
+    function removeRow(index, e) {
+      const x = e.clientX;
+      const y = e.clientY;
+      showExplosion(x, y);
+      toast("笨比悄悄炸掉了一条秘密！");
+      records[index].destroy().then(() => loadData());
+    }
+
+    if (AV.User.current()) showApp(AV.User.current());
+  </script>
 </body>
 </html>
