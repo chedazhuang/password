@@ -3,12 +3,12 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>账号密码管理器</title>
+    <title>账号密码表</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 640px;
-            margin: 40px auto;
+            max-width: 600px;
+            margin: 30px auto;
             padding: 20px;
         }
         h2 {
@@ -20,77 +20,53 @@
             margin-top: 20px;
         }
         th, td {
-            border: 1px solid #ccc;
-            padding: 6px;
+            border: 1px solid #999;
+            padding: 8px;
             text-align: left;
         }
         input {
             width: 100%;
-            box-sizing: border-box;
+            border: none;
             padding: 4px;
-            font-size: 14px;
         }
         button {
-            margin-top: 12px;
-            padding: 8px 14px;
-            font-size: 14px;
+            margin-top: 15px;
+            padding: 8px 16px;
+            font-size: 15px;
         }
     </style>
 </head>
 <body>
-    <h2>我的账号密码表</h2>
-    <p>仅保存在本地浏览器中，请勿清理缓存或更换设备。</p>
-    <table>
+    <h2>账号密码表</h2>
+    <table id="passwordTable">
         <thead>
             <tr>
                 <th>平台</th>
                 <th>账号</th>
                 <th>密码</th>
-                <th>操作</th>
             </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody>
+            <!-- 初始空表格 -->
+        </tbody>
     </table>
     <button onclick="addRow()">添加新行</button>
 
     <script>
-        function loadData() {
-            const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
-            const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = '';
-            data.forEach((item, i) => {
-                const row = document.createElement('tr');
-                row.innerHTML = \`
-                    <td><input value="\${item.platform}" onchange="updateData(\${i}, 'platform', this.value)" /></td>
-                    <td><input value="\${item.username}" onchange="updateData(\${i}, 'username', this.value)" /></td>
-                    <td><input value="\${item.password}" onchange="updateData(\${i}, 'password', this.value)" /></td>
-                    <td><button onclick="deleteRow(\${i})">删除</button></td>
-                \`;
-                tableBody.appendChild(row);
-            });
-        }
-
         function addRow() {
-            const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
-            data.push({ platform: '', username: '', password: '' });
-            localStorage.setItem('myPasswords', JSON.stringify(data));
-            loadData();
-        }
+            const tbody = document.getElementById('passwordTable').getElementsByTagName('tbody')[0];
+            const newRow = document.createElement('tr');
 
-        function updateData(index, field, value) {
-            const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
-            data[index][field] = value;
-            localStorage.setItem('myPasswords', JSON.stringify(data));
-        }
+            for (let i = 0; i < 3; i++) {
+                const cell = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = 'text';
+                cell.appendChild(input);
+                newRow.appendChild(cell);
+            }
 
-        function deleteRow(index) {
-            const data = JSON.parse(localStorage.getItem('myPasswords') || '[]');
-            data.splice(index, 1);
-            localStorage.setItem('myPasswords', JSON.stringify(data));
-            loadData();
+            tbody.appendChild(newRow);
         }
-
-        window.onload = loadData;
     </script>
 </body>
 </html>
